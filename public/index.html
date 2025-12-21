@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Envie emails em massa para seus clientes">
+    <meta name="keywords" content="email marketing, envio de emails, marketing digital">
+    <meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="assets/style/styles.css">
+    <!-- <link rel="stylesheet" href="assets/style/template-selector.css"> -->
+    <link rel="icon" type="image/png" href="assets/imgs/email-icon-removebg-preview.png">
+    <title>Blast Email Sender</title>
+
+</head>
+
+<body>
+    <div class="bg-video" aria-hidden="true">
+        <video autoplay muted loop playsinline>
+            <source src="assets/imgs/2759477-uhd_3840_2160_30fps.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <main>
+        <section id="contact" class="contact">
+            <div class="glitch-form-wrapper">
+                <form class="glitch-card" id="contact-form" method="POST" action="/send-email">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h2>Blast Email <span>Sender</span></h2>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                        <div class="step-indicators">
+                            <span class="step-dot active" data-step="1">1</span>
+                            <span class="step-dot" data-step="2">2</span>
+                            <span class="step-dot" data-step="3">3</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Step 1: Identity -->
+                        <div class="form-step active" data-step="1">
+                            <h3 class="step-title">Identidade</h3>
+                            <div class="form-group">
+                                <input type="text" id="senderName" name="senderName" required="" placeholder="" />
+                                <label for="senderName" class="form-label" data-text="NOME REMETENTE">NOME
+                                    REMETENTE</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="senderEmail" name="senderEmail" placeholder="" />
+                                <label for="senderEmail" class="form-label" data-text="EMAIL REMETENTE (OPCIONAL)">EMAIL
+                                    REMETENTE <span class="optional-text">(OPCIONAL)</span></label>
+                            </div>
+                            <div class="form-group checkbox-group"
+                                style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <input type="checkbox" id="showSenderEmail" name="showSenderEmail" style="width: auto;">
+                                <label for="showSenderEmail"
+                                    style="position: static; color: var(--text-color-primary); font-size: 0.9rem; pointer-events: auto;">Usar
+                                    este email como resposta (Reply-To)?</label>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Recipients -->
+                        <div class="form-step" data-step="2">
+                            <h3 class="step-title">Destinatários</h3>
+                            <p class="step-desc">Insira os e-mails um por um.</p>
+                            <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                                <div style="flex-grow: 1; position: relative;">
+                                    <input type="email" id="emailInput" placeholder="" />
+                                    <label for="emailInput" class="form-label" data-text="ADICIONAR EMAIL">ADICIONAR
+                                        EMAIL</label>
+                                </div>
+                                <button type="button" id="addEmailBtn" class="nav-btn secondary"
+                                    style="padding: 0.75em 1.2em; border-width: 1px;">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+
+                            <!-- List Container -->
+                            <div id="emailListContainer" style="
+                                    margin-top: 1rem; 
+                                    max-height: 200px; 
+                                    overflow-y: auto; 
+                                    padding-right: 5px;
+                                    /* scrollbar styles for webkit */
+                                    scrollbar-width: thin;
+                                    scrollbar-color: var(--brand-glow) rgba(255,255,255,0.1);
+                                ">
+                                <!-- Dynamic Email Items will go here -->
+                            </div>
+
+                            <!-- Hidden textarea to store comma-separated emails for form submission logic -->
+                            <textarea id="recipients" name="recipients" required="" hidden></textarea>
+                        </div>
+
+                        <!-- Step 3: Content -->
+                        <div class="form-step" data-step="3">
+                            <h3 class="step-title">Escolha um template para começar a editar</h3>
+                            <div class="templates-grid">
+                                <!-- Blank Template -->
+                                <div class="template-card blank-template" onclick="selectTemplate('blank')">                                    <div class="template-preview">
+                                        <i class="fas fa-file-alt"></i>
+                                        <span class="badge">Começar do Zero</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Template em Branco</h3>
+                                        <p>Comece com um canvas vazio e construa seu email do zero</p>
+                                    </div>
+                                </div>
+
+                                <!-- Pre-made Templates (placeholders) -->
+                                <div class="template-card" data-template="welcome">
+                                    <div class="template-preview">
+                                        <i class="fas fa-hand-wave"></i>
+                                        <span class="badge coming-soon">Em Breve</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Boas-Vindas</h3>
+                                        <p>Template para dar boas-vindas a novos usuários</p>
+                                    </div>
+                                </div>
+
+                                <div class="template-card" data-template="newsletter">
+                                    <div class="template-preview">
+                                        <i class="fas fa-newspaper"></i>
+                                        <span class="badge coming-soon">Em Breve</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Newsletter</h3>
+                                        <p>Template para envio de newsletters periódicas</p>
+                                    </div>
+                                </div>
+
+                                <div class="template-card" data-template="promo">
+                                    <div class="template-preview">
+                                        <i class="fas fa-tag"></i>
+                                        <span class="badge coming-soon">Em Breve</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Promocional</h3>
+                                        <p>Template para campanhas promocionais e ofertas</p>
+                                    </div>
+                                </div>
+
+                                <div class="template-card" data-template="confirmation">
+                                    <div class="template-preview">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span class="badge coming-soon">Em Breve</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Confirmação</h3>
+                                        <p>Template para emails de confirmação de ações</p>
+                                    </div>
+                                </div>
+
+                                <div class="template-card" data-template="reset">
+                                    <div class="template-preview">
+                                        <i class="fas fa-key"></i>
+                                        <span class="badge coming-soon">Em Breve</span>
+                                    </div>
+                                    <div class="template-info">
+                                        <h3>Reset de Senha</h3>
+                                        <p>Template para recuperação de senha</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="form-navigation">
+                            <button type="button" id="prevBtn" class="nav-btn secondary" hidden>
+                                <i class="fa-solid fa-arrow-left"></i> Voltar
+                            </button>
+                            <button type="button" id="nextBtn" class="nav-btn primary">
+                                Próximo <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="form-status" id="form-status" aria-live="polite" role="status" hidden>
+                <div class="status-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                <div class="status-title">Status</div>
+                <div class="status-message">Aguardando envio...</div>
+                <div class="status-progress"></div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <script src="assets/src/script.js"></script>
+    <script>
+        function selectTemplate(type) {
+            if (type === 'blank') {
+                window.location.href = 'editor.html?template=blank';
+            } else {
+                alert('Este template estará disponível em breve!');
+            }
+        }
+        document.querySelectorAll('.template-card[data-template]').forEach(card => {
+            card.addEventListener('click', () => {
+                alert('Este template estará disponível em breve!');
+            });
+        });
+    </script>
+</body>
+
+</html>

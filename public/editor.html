@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Visual de Emails</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="assets/style/styles.css">
+</head>
+
+<body>
+    <div class="bg-video">
+        <video autoplay muted loop playsinline>
+            <source src="assets/videos/background.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="editor-container">
+        <!-- Toolbar -->
+        <header class="editor-toolbar">
+            <div class="toolbar-left">
+                <h1 class="editor-title">
+                    <i class="fas fa-envelope"></i>
+                    Editor Visual de Emails
+                </h1>
+            </div>
+            <div class="toolbar-center">
+                <div class="history-controls" style="margin-right: 20px; display: flex; gap: 10px;">
+                    <button class="toolbar-btn" id="undoBtn" title="Desfazer (Ctrl+Z)">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="toolbar-btn" id="redoBtn" title="Avançar (Ctrl+Y)">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="desktop">
+                        <i class="fas fa-desktop"></i>
+                        Desktop
+
+                    </button>
+                    <button class="toggle-btn" data-view="mobile">
+                        <i class="fas fa-mobile-alt"></i>
+                        Mobile
+                    </button>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <button class="toolbar-btn" id="importBtn">
+                    <i class="fas fa-file-import"></i>
+                    Importar Template
+                </button>
+                <button class="toolbar-btn primary" id="exportBtn">
+                    <i class="fas fa-download"></i>
+                    Exportar HTML
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Editor Area -->
+        <div class="editor-main">
+            <!-- Left Sidebar - Component Library -->
+            <aside class="component-library">
+                <div class="library-header">
+                    <h2>Componentes</h2>
+                </div>
+                <div class="library-content">
+                    <div class="component-category">
+                        <h3>Layout</h3>
+                        <div class="component-list">
+                            <div class="component-item" draggable="true" data-type="header">
+                                <i class="fas fa-heading"></i>
+                                <span>Header</span>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="footer">
+                                <i class="fas fa-shoe-prints"></i>
+                                <span>Footer</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="component-category">
+                        <h3>Conteúdo</h3>
+                        <div class="component-list">
+                            <div class="component-item" draggable="true" data-type="text">
+                                <i class="fas fa-align-left"></i>
+                                <span>Texto</span>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="heading">
+                                <i class="fas fa-heading"></i>
+                                <span>Título</span>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="button">
+                                <i class="fas fa-square"></i>
+                                <span>Botão</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="component-category">
+                        <h3>Mídia</h3>
+                        <div class="component-list">
+                            <div class="component-item" draggable="true" data-type="image">
+                                <i class="fas fa-image"></i>
+                                <span>Imagem</span>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="social">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Redes Sociais</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center - Canvas Preview -->
+            <main class="editor-canvas">
+                <div class="canvas-wrapper">
+                    <div class="canvas-container" id="canvasContainer">
+                        <iframe id="previewFrame" frameborder="0"></iframe>
+                    </div>
+                    <div class="canvas-empty-state" id="emptyState">
+                        <i class="fas fa-file-import"></i>
+                        <h3>Nenhum template carregado</h3>
+                        <p>Importe um template HTML para começar a editar</p>
+                        <button class="btn-primary" onclick="document.getElementById('importBtn').click()">
+                            <i class="fas fa-file-import"></i>
+                            Importar Template
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Properties Panel -->
+            <aside class="properties-panel">
+                <div class="panel-header">
+                    <h2>Propriedades</h2>
+                </div>
+                <div class="panel-content" id="propertiesContent">
+                    <div class="panel-empty-state">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <p>Selecione um elemento para editar suas propriedades</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Importar Template HTML</h2>
+                <button class="modal-close" onclick="closeImportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="import-options">
+                    <div class="import-option">
+                        <h3>Colar HTML</h3>
+                        <textarea id="htmlInput" placeholder="Cole o código HTML aqui..." rows="15"></textarea>
+                    </div>
+                    <div class="import-option">
+                        <h3>Ou carregar arquivo</h3>
+                        <input type="file" id="fileInput" accept=".html" style="display: none;">
+                        <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-file-upload"></i>
+                            Escolher Arquivo
+                        </button>
+                        <p class="file-name" id="fileName"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeImportModal()">Cancelar</button>
+                <button class="btn-primary" onclick="importTemplate()">
+                    <i class="fas fa-check"></i>
+                    Importar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/src/editor/component-registry.js"></script>
+    <script src="assets/src/editor/template-parser.js"></script>
+    <script src="assets/src/editor/history-manager.js"></script>
+    <script src="assets/src/editor/html-exporter.js"></script>
+    <script src="assets/src/editor/editor-canvas.js"></script>
+    <script src="assets/src/editor/properties-panel.js"></script>
+    <script src="assets/src/editor/component-library.js"></script>
+    <script src="assets/src/editor/drag-drop-manager.js"></script>
+    <script src="assets/src/editor/responsive-manager.js"></script>
+    <script src="assets/src/editor/editor-main.js"></script>
+</body>
+
+</html>
