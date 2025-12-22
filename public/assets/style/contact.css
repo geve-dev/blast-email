@@ -55,7 +55,7 @@
 }
 
 .card-body {
-  padding: 3rem 2rem;
+  padding: 2rem 2rem;
 }
 
 .form-group {
@@ -648,7 +648,9 @@
 }
 
 @media (max-width: 600px) {
-  /* Removed large margin-top to allow centering */
+.step-title {
+    font-size: 1rem;
+}
 
   .submit-btn {
     width: 100%;

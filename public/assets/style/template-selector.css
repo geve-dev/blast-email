@@ -57,6 +57,9 @@ body {
 
 /* ===== TEMPLATES GRID ===== */
 .templates-grid {
+    /* position: relative;
+    top: -20px; */
+    margin-bottom: 200px;
     display: grid;
     grid-template-columns: repeat(2, minmax(260px, 1fr));
     gap: clamp(1rem, 2vw, 2vw);
@@ -293,8 +296,27 @@ body {
     }
 
     /* Ensure cards fit on narrow screens */
+    .templates-grid {
+        max-height: 300px;
+    }
+
+    /* Reduce main glitch card size on smaller screens */
+    .glitch-card {
+        width: 90vw !important;
+        max-width: 420px;
+    }
+
     .template-card {
         width: 100%;
         height: auto;
+        max-width: 320px;
+    }
+
+    .template-preview {
+        height: 120px;
+    }
+
+    .template-preview i {
+        font-size: 2.5rem;
     }
 }
