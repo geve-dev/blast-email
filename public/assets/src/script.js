@@ -468,6 +468,31 @@ function validateStep(stepIndex) {
     return isValid;
 }
 
+// Função para salvar os dados do formulário e abrir o editor
+function saveFormDataAndOpenEditor() {
+    // Coletar dados do formulário
+    const formData = {
+        senderName: document.getElementById('senderName').value.trim(),
+        senderEmail: document.getElementById('senderEmail').value.trim(),
+        showSenderEmail: document.getElementById('showSenderEmail').checked,
+        recipients: document.getElementById('recipients').value
+    };
+
+    // Salvar no localStorage
+    localStorage.setItem('emailFormData', JSON.stringify(formData));
+
+    // Redirecionar para o editor
+    window.location.href = 'editor.html';
+}
+
+// Adicionar listener para o botão de abrir editor
+document.addEventListener('DOMContentLoaded', () => {
+    const openEditorBtn = document.querySelector('button[onclick*="selectTemplate"]');
+    if (openEditorBtn) {
+        openEditorBtn.addEventListener('click', saveFormDataAndOpenEditor);
+    }
+});
+
 // 2. Adicionar o Listener para o evento de submit
 form.addEventListener("submit", async function (event) {
     event.preventDefault(); // Impede o envio padrão (que te levaria para a tela do Formspree)

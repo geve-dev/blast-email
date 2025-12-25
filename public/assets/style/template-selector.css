@@ -319,4 +319,10 @@ body {
     .template-preview i {
         font-size: 2.5rem;
     }
+}const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({ host, port, auth:{user,pass} });
+
+for (const r of recipients) {
+  const html = templateHtml.replace(/\{\{nome\}\}/g, r.nome);
+  await transporter.sendMail({ from:'you@ex.com', to: r.email, subject, html });
 }

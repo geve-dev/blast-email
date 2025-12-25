@@ -18,7 +18,7 @@
 <body>
     <div class="bg-video" aria-hidden="true">
         <video autoplay muted loop playsinline>
-            <source src="assets/imgs/2759477-uhd_3840_2160_30fps.mp4" type="video/mp4">
+            <source src="assets/imgs/banner.mp4" type="video/mp4">
         </video>
     </div>
 
@@ -103,7 +103,8 @@
                             <h3 class="step-title">Escolha um template para editar</h3>
                             <div class="templates-grid">
                                 <!-- Blank Template -->
-                                <div class="template-card blank-template" onclick="selectTemplate('blank')">                                    <div class="template-preview">
+                                <div class="template-card blank-template" onclick="selectTemplate('blank')">
+                                    <div class="template-preview">
                                         <i class="fas fa-file-alt"></i>
                                         <span class="badge">Começar do Zero</span>
                                     </div>
@@ -197,6 +198,18 @@
     <script src="assets/src/script.js"></script>
     <script>
         function selectTemplate(type) {
+            // Coletar dados do formulário
+            const formData = {
+                senderName: document.getElementById('senderName').value.trim(),
+                senderEmail: document.getElementById('senderEmail').value.trim(),
+                showSenderEmail: document.getElementById('showSenderEmail').checked,
+                recipients: document.getElementById('recipients').value
+            };
+
+            // Salvar no localStorage
+            localStorage.setItem('emailFormData', JSON.stringify(formData));
+
+            // Redirecionar para o editor com o template selecionado
             if (type === 'blank') {
                 window.location.href = 'editor.html?template=blank';
             } else {

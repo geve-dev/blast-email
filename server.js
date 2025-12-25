@@ -72,15 +72,27 @@ app.post('/send-email', async (req, res) => {
 
     // 2. Iterar e enviar para cada um
     for (const recipient of recipientList) {
+        // Check if message contains HTML tags
+        const isHTML = /<[a-z][\s\S]*>/i.test(message);
+        
         // Montar as opções do e-mail
         let mailOptions = {
-            from: `"${senderName || 'Remetente'}" <${process.env.EMAIL_USER}>`, // O 'from' deve ser o email autenticado do SMTP
+            from: `"${senderName || 'Remetente'}" <${process.env.EMAIL_USER}>`,
             to: recipient,
-            replyTo: showSenderEmail ? senderEmail : undefined, // Se marcado, responde para o email do remetente
-            subject: subject || `Nova mensagem de: ${senderName || 'Desconhecido'}`,
-            text: message // Mensagem simples
-            // html: `<p>${message}</p>` // Se quiser suportar HTML no futuro
+            replyTo: showSenderEmail ? senderEmail : undefined,
+            subject: subject || `Nova mensagem de: ${senderName || 'Desconhecido'}`
         };
+
+        // Set text or HTML content based on message content
+        if (isHTML) {
+            // If message contains HTML, use it as HTML and create a text version
+            mailOptions.html = message;
+            // Create a simple text version by stripping HTML tags
+            mailOptions.text = message.replace(/<[^>]*>?/gm, '');
+        } else {
+            // Plain text message
+            mailOptions.text = message;
+        }
 
         try {
             await transporter.sendMail(mailOptions);

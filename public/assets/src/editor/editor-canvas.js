@@ -170,7 +170,7 @@ const EditorCanvas = {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('reorderComponentId', componentId);
 
-        e.target.style.opacity = '0.5';
+        e.target.style.opacity = '1';
         e.target.classList.add('dragging-component');
     },
 

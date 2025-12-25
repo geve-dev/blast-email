@@ -588,7 +588,7 @@
 }
 
 .icon-btn.save {
-  color: #4caf50;
+  color: #00ffd0;
 }
 
 .icon-btn.save:hover {
@@ -648,15 +648,15 @@
 }
 
 @media (max-width: 600px) {
-.step-title {
+  .step-title {
     font-size: 1rem;
-}
+  }
 
   .submit-btn {
     width: 100%;
     font-size: 0.7rem;
     padding: 10px;
-    
+
   }
 
   .form-group input,
