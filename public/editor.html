@@ -418,6 +418,32 @@
             return re.test(String(email).toLowerCase());
         }
 
+        // Clean HTML from editor-specific classes and styles
+        function cleanEmailHTML(html) {
+            // Create a temporary div to parse the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Remove editor-specific classes and styles
+            const elements = tempDiv.querySelectorAll('*');
+            elements.forEach(el => {
+                // Remove editor-specific classes
+                el.classList.remove('editable-element', 'selected');
+                
+                // Remove inline styles that might affect appearance
+                el.style.outline = '';
+                el.style.outlineOffset = '';
+                el.style.background = '';
+                el.style.zIndex = '';
+                el.style.position = '';
+                el.style.cursor = '';
+                el.style.transition = '';
+            });
+            
+            // Return the cleaned HTML
+            return tempDiv.innerHTML;
+        }
+
         // Send email function
         async function sendEmail() {
             const subject = document.getElementById('emailSubject').value.trim();
@@ -437,8 +463,8 @@
                 return;
             }
 
-            // Obter o conteúdo HTML do iframe de visualização
-            const emailContent = document.getElementById('previewFrame').contentDocument.documentElement.outerHTML;
+            // Obter o conteúdo HTML do iframe de visualização e limpar classes e estilos do editor
+            const emailContent = cleanEmailHTML(document.getElementById('previewFrame').contentDocument.documentElement.outerHTML);
 
             // Mostrar indicador de carregamento
             const sendBtn = document.querySelector('#sendEmailModal .btn-success');

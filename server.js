@@ -89,6 +89,37 @@ app.post('/send-email', async (req, res) => {
             mailOptions.html = message;
             // Create a simple text version by stripping HTML tags
             mailOptions.text = message.replace(/<[^>]*>?/gm, '');
+
+            // === Detect data:image (base64) images in HTML and convert them to inline attachments (CID)
+            // Gmail and many clients may block Data-URLs in received messages, so attach them properly.
+            const dataUriRegex = /src=["'](data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+))["']/gi;
+            let attachments = [];
+            let cidIndex = 0;
+
+            mailOptions.html = mailOptions.html.replace(dataUriRegex, (match, fullDataUri, mimeType, b64) => {
+                try {
+                    const extension = (mimeType === 'jpeg' || mimeType === 'jpg') ? 'jpg' : mimeType;
+                    const buffer = Buffer.from(b64, 'base64');
+                    const cid = `inline-image-${Date.now()}-${cidIndex}@cid`;
+
+                    attachments.push({
+                        filename: `image-${cidIndex}.${extension}`,
+                        content: buffer,
+                        cid: cid,
+                        contentType: `image/${mimeType}`
+                    });
+
+                    cidIndex++;
+                    return `src="cid:${cid}"`;
+                } catch (err) {
+                    console.error('Erro convertendo data URI para anexo:', err.message);
+                    return match; // fallback: keep original src
+                }
+            });
+
+            if (attachments.length) {
+                mailOptions.attachments = attachments;
+            }
         } else {
             // Plain text message
             mailOptions.text = message;
