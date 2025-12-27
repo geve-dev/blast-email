@@ -384,20 +384,98 @@ const EditorCanvas = {
 
     // Render social icons
     renderSocial(component) {
-        const { facebookUrl, instagramUrl, whatsappUrl, twitterUrl, linkedinUrl, youtubeUrl, iconSize, align } = component.properties;
+        const { socialLinks, iconSize, align } = component.properties;
 
-        const socialLinks = [
-            { url: facebookUrl, icon: 'fa-facebook', type: 'facebook' },
-            { url: instagramUrl, icon: 'fa-instagram', type: 'instagram' },
-            { url: whatsappUrl, icon: 'fa-whatsapp', type: 'whatsapp' },
-            { url: twitterUrl, icon: 'fa-twitter', type: 'twitter' },
-            { url: linkedinUrl, icon: 'fa-linkedin', type: 'linkedin' },
-            { url: youtubeUrl, icon: 'fa-youtube', type: 'youtube' }
-        ];
+        const localBasePath = '/assets/social-icons';
+        const localIconFileMap = {
+            facebook: 'facebook.png',
+            instagram: 'instagram.png',
+            whatsapp: 'whatsapp.png',
+            twitter: 'x.png',
+            youtube: 'youtube.png',
+            reddit: 'reddit.png',
+            pinterest: 'pinterest.png',
+            tiktok: 'tiktok.png',
+            github: 'github.png',
+            snapchat: 'snapchat.png',
+            discord: 'discord.png'
+        };
 
-        const iconsHTML = socialLinks
-            .filter(link => link.url && link.url.trim() !== '')
-            .map(link => `<a href="${link.url}" style="margin: 0 10px; font-size: ${iconSize}; color: #333; text-decoration: none;"><i class="fab ${link.icon}"></i></a>`)
+        const getLocalIconUrl = (type) => {
+            const file = localIconFileMap[type];
+            if (!file) return '';
+            return `${localBasePath}/${file}`;
+        };
+
+        const iconMap = {
+            facebook: 'fa-facebook',
+            instagram: 'fa-instagram',
+            whatsapp: 'fa-whatsapp',
+            twitter: 'fa-twitter',
+            linkedin: 'fa-linkedin',
+            youtube: 'fa-youtube',
+            reddit: 'fa-reddit-alien',
+            pinterest: 'fa-pinterest',
+            tiktok: 'fa-tiktok',
+            telegram: 'fa-telegram',
+            discord: 'fa-discord',
+            github: 'fa-github',
+            snapchat: 'fa-snapchat-ghost'
+        };
+
+        let links = Array.isArray(socialLinks) ? socialLinks : null;
+
+        // Fallback: convert legacy fixed URL props to socialLinks
+        if (!links) {
+            const p = component.properties || {};
+            const legacy = [
+                { type: 'facebook', url: p.facebookUrl },
+                { type: 'instagram', url: p.instagramUrl },
+                { type: 'whatsapp', url: p.whatsappUrl },
+                { type: 'twitter', url: p.twitterUrl },
+                { type: 'linkedin', url: p.linkedinUrl },
+                { type: 'youtube', url: p.youtubeUrl },
+                { type: 'reddit', url: p.redditUrl },
+                { type: 'pinterest', url: p.pinterestUrl },
+                { type: 'tiktok', url: p.tiktokUrl },
+                { type: 'telegram', url: p.telegramUrl }
+            ];
+
+            const enabled = Array.isArray(p.enabledNetworks) && p.enabledNetworks.length > 0 ? p.enabledNetworks : null;
+            links = legacy
+                .filter(l => {
+                    if (!l.url || String(l.url).trim() === '') return false;
+                    if (enabled && !enabled.includes(l.type)) return false;
+                    return true;
+                })
+                .map(l => ({ type: l.type, url: l.url }));
+        }
+
+        const iconsHTML = (links || [])
+            .filter(link => link && link.url && String(link.url).trim() !== '')
+            .map(link => {
+                const isCustom = link && link.type === 'custom';
+                const customIconSrc = link && link.iconSrc ? String(link.iconSrc) : '';
+
+                if (isCustom) {
+                    const size = iconSize || '32px';
+                    const inner = customIconSrc
+                        ? `<img src="${customIconSrc}" alt="custom" style="width:${size}; height:${size}; object-fit:contain; display:inline-block; vertical-align:middle;" />`
+                        : `<span style="display:inline-block; width:${size}; height:${size}; line-height:${size}; text-align:center; font-size: 12px; color:#999;">?</span>`;
+                    return `<a href="${link.url}" style="margin: 0 10px; text-decoration: none; display:inline-block;">${inner}</a>`;
+                }
+
+                const size = iconSize || '32px';
+                const localIconUrl = getLocalIconUrl(link.type);
+                if (localIconUrl) {
+                    return `<a href="${link.url}" style="margin: 0 10px; text-decoration: none; display:inline-block;"><img src="${localIconUrl}" alt="${link.type}" style="width:${size}; height:${size}; object-fit:contain; display:inline-block; vertical-align:middle;" /></a>`;
+                }
+
+                const icon = iconMap[link.type] || 'fa-globe';
+                const isFab = icon !== 'fa-globe';
+                const iconClass = isFab ? `fab ${icon}` : `fas ${icon}`;
+                return `<a href="${link.url}" style="margin: 0 10px; font-size: ${iconSize}; color: #333; text-decoration: none;"><i class="${iconClass}"></i></a>`;
+            })
             .join('');
 
         return `

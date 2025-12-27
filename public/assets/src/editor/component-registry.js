@@ -63,14 +63,14 @@ const ComponentRegistry = {
             name: 'Redes Sociais',
             icon: 'fa-share-alt',
             category: 'media',
-            editableProps: ['facebookUrl', 'instagramUrl', 'whatsappUrl', 'twitterUrl', 'linkedinUrl', 'youtubeUrl', 'iconSize', 'align'],
+            editableProps: ['socialLinks', 'iconSize', 'align'],
             defaultValues: {
-                facebookUrl: 'https://facebook.com',
-                instagramUrl: 'https://instagram.com',
-                whatsappUrl: 'https://whatsapp.com',
-                twitterUrl: 'https://twitter.com',
-                linkedinUrl: '',
-                youtubeUrl: '',
+                socialLinks: [
+                    { type: 'facebook', url: 'https://facebook.com' },
+                    { type: 'instagram', url: 'https://instagram.com' },
+                    { type: 'whatsapp', url: 'https://whatsapp.com' },
+                    { type: 'twitter', url: 'https://twitter.com' }
+                ],
                 iconSize: '32px',
                 align: 'center'
             }
@@ -246,6 +246,10 @@ const ComponentRegistry = {
         twitterUrl: { type: 'url', label: 'Twitter URL', placeholder: 'https://...', icon: 'fa-twitter' },
         linkedinUrl: { type: 'url', label: 'LinkedIn URL', placeholder: 'https://...', icon: 'fa-linkedin' },
         youtubeUrl: { type: 'url', label: 'YouTube URL', placeholder: 'https://...', icon: 'fa-youtube' },
+        redditUrl: { type: 'url', label: 'Reddit URL', placeholder: 'https://...', icon: 'fa-reddit-alien' },
+        pinterestUrl: { type: 'url', label: 'Pinterest URL', placeholder: 'https://...', icon: 'fa-pinterest' },
+        tiktokUrl: { type: 'url', label: 'TikTok URL', placeholder: 'https://...', icon: 'fa-tiktok' },
+        telegramUrl: { type: 'url', label: 'Telegram URL', placeholder: 'https://...', icon: 'fa-telegram' },
         iconSize: {
             type: 'range',
             label: 'Tamanho dos Ícones',

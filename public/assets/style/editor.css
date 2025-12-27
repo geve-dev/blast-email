@@ -513,6 +513,94 @@ body {
     overflow-y: auto;
 }
 
+/* Social networks picker (properties panel) */
+.social-more-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0.75rem;
+}
+
+.social-more-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 208, 0.25);
+    background: rgba(0, 255, 208, 0.08);
+    color: var(--brand-glow);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.social-more-btn:hover {
+    background: rgba(0, 255, 208, 0.14);
+    box-shadow: 0 0 14px rgba(0, 255, 208, 0.22);
+    transform: translateY(-1px);
+}
+
+.social-more-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.social-chip {
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--editor-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-chip i {
+    font-size: 18px;
+}
+
+.social-network-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.social-network-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--editor-text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.social-network-btn i {
+    font-size: 22px;
+}
+
+.social-network-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+}
+
+.social-network-btn.active {
+    border-color: rgba(0, 255, 208, 0.5);
+    background: rgba(0, 255, 208, 0.12);
+    color: var(--brand-glow);
+    box-shadow: 0 0 18px rgba(0, 255, 208, 0.2);
+}
+
 .import-options {
     display: flex;
     flex-direction: column;
@@ -612,6 +700,33 @@ body {
 
 .btn-delete i {
     font-size: 0.85rem;
+}
+
+/* Clear URL Button (Social) */
+.btn-clear-url {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: red;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-clear-url:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(0, 255, 208, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(0, 255, 208, 0.15);
+}
+
+.btn-clear-url i {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
 /* Upload Button */

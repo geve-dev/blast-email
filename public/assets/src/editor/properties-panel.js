@@ -39,19 +39,226 @@ const PropertiesPanel = {
             </div>
         `;
 
-        // Render controls for each editable property
-        componentDef.editableProps.forEach(propName => {
-            const propMeta = ComponentRegistry.getPropertyMeta(propName);
-            if (!propMeta) return;
+        if (this.currentComponent.type === 'social') {
+            html += this.renderSocialControls();
+        } else {
+            componentDef.editableProps.forEach(propName => {
+                const propMeta = ComponentRegistry.getPropertyMeta(propName);
+                if (!propMeta) return;
 
-            const currentValue = this.currentComponent.properties[propName];
-            html += this.renderControl(propName, propMeta, currentValue);
-        });
+                const currentValue = this.currentComponent.properties[propName];
+                html += this.renderControl(propName, propMeta, currentValue);
+            });
+        }
 
         this.container.innerHTML = html;
 
         // Add event listeners
         this.attachEventListeners();
+    },
+
+    renderSocialControls() {
+        const iconMap = {
+            facebook: 'fa-facebook',
+            instagram: 'fa-instagram',
+            whatsapp: 'fa-whatsapp',
+            twitter: 'fa-twitter',
+            linkedin: 'fa-linkedin',
+            youtube: 'fa-youtube',
+            reddit: 'fa-reddit-alien',
+            pinterest: 'fa-pinterest',
+            tiktok: 'fa-tiktok',
+            telegram: 'fa-telegram',
+            discord: 'fa-discord',
+            github: 'fa-github',
+            snapchat: 'fa-snapchat-ghost'
+        };
+
+        const localBasePath = '/assets/social-icons';
+        const localIconFileMap = {
+            facebook: 'facebook.png',
+            instagram: 'instagram.png',
+            whatsapp: 'whatsapp.png',
+            twitter: 'x.png',
+            youtube: 'youtube.png',
+            reddit: 'reddit.png',
+            pinterest: 'pinterest.png',
+            tiktok: 'tiktok.png',
+            github: 'github.png',
+            snapchat: 'snapchat.png',
+            discord: 'discord.png'
+        };
+
+        const getLocalIconUrl = (type) => {
+            const file = localIconFileMap[type];
+            if (!file) return '';
+            return `${localBasePath}/${file}`;
+        };
+
+        const defaultUrlMap = {
+            facebook: 'https://facebook.com',
+            instagram: 'https://instagram.com',
+            whatsapp: 'https://whatsapp.com',
+            twitter: 'https://twitter.com',
+            linkedin: 'https://linkedin.com',
+            youtube: 'https://youtube.com',
+            reddit: 'https://reddit.com',
+            pinterest: 'https://pinterest.com',
+            tiktok: 'https://tiktok.com',
+            telegram: 'https://t.me',
+            discord: 'https://discord.com',
+            github: 'https://github.com',
+            snapchat: 'https://snapchat.com'
+        };
+
+        const availableNetworks = Object.keys(iconMap);
+
+        let links = Array.isArray(this.currentComponent.properties.socialLinks)
+            ? this.currentComponent.properties.socialLinks
+            : null;
+
+        // Fallback: convert legacy fixed URL props to socialLinks
+        if (!links) {
+            const p = this.currentComponent.properties || {};
+            const legacy = [
+                { type: 'facebook', url: p.facebookUrl },
+                { type: 'instagram', url: p.instagramUrl },
+                { type: 'whatsapp', url: p.whatsappUrl },
+                { type: 'twitter', url: p.twitterUrl },
+                { type: 'linkedin', url: p.linkedinUrl },
+                { type: 'youtube', url: p.youtubeUrl },
+                { type: 'reddit', url: p.redditUrl },
+                { type: 'pinterest', url: p.pinterestUrl },
+                { type: 'tiktok', url: p.tiktokUrl },
+                { type: 'telegram', url: p.telegramUrl }
+            ];
+
+            const enabled = Array.isArray(p.enabledNetworks) && p.enabledNetworks.length > 0 ? p.enabledNetworks : null;
+
+            links = legacy
+                .filter(l => {
+                    if (!l.url || String(l.url).trim() === '') return false;
+                    if (enabled && !enabled.includes(l.type)) return false;
+                    return true;
+                })
+                .map(l => ({ type: l.type, url: l.url }));
+
+            this.updateProperty('socialLinks', links);
+        }
+
+        links = Array.isArray(links) ? links : [];
+
+        let html = `
+            <div class="property-group">
+                <div class="social-more-header">
+                    <label class="property-label" style="margin-bottom: 0;">Mais redes</label>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="social-more-btn" data-action="open-social-networks" title="Adicionar rede">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button type="button" class="social-more-btn" data-action="add-custom-social" title="Adicionar rede personalizada">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="social-more-selected">
+                    <span style="color: var(--editor-text-muted); font-size: 0.85rem;">Clique no + para adicionar novas redes (pode repetir) ou na estrela para adicionar uma rede personalizada.</span>
+                </div>
+            </div>
+        `;
+
+        html += `
+            <div class="property-group">
+                <label class="property-label">Redes adicionadas</label>
+                <div class="social-links-list">
+                    ${links.length === 0
+                ? '<div style="color: var(--editor-text-muted); font-size: 0.85rem;">Nenhuma rede adicionada</div>'
+                : links.map((link, index) => {
+                    const icon = iconMap[link.type] || 'fa-globe';
+                    const isFab = icon !== 'fa-globe';
+                    const iconClass = isFab ? `fab ${icon}` : `fas ${icon}`;
+                    const url = link && link.url ? String(link.url) : '';
+                    const isCustom = link && link.type === 'custom';
+                    const customIconSrc = link && link.iconSrc ? String(link.iconSrc) : '';
+                    const localIconUrl = getLocalIconUrl(link.type);
+                    return `
+                                <div class="social-link-row" data-social-index="${index}" style="display:flex; gap:8px; align-items:center; margin-bottom: 10px;">
+                                    <div class="social-link-icon" style="width:38px; height:38px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                        ${isCustom && customIconSrc
+                            ? `<img src="${customIconSrc}" alt="custom" style="width: 22px; height: 22px; object-fit: contain;" />`
+                            : (localIconUrl
+                                ? `<img src="${localIconUrl}" alt="${link.type}" style="width: 22px; height: 22px; object-fit: contain; filter: brightness(0) invert(1);" />`
+                                : `<i class="${iconClass}" style="font-size: 18px;"></i>`)}
+
+                                    </div>
+                                    <input
+                                        type="text"
+                                        class="property-input social-link-input"
+                                        data-social-index="${index}"
+                                        value="${url}"
+                                        placeholder="${defaultUrlMap[link.type] || 'https://...'}"
+                                        style="flex:1;"
+                                    >
+                                    ${isCustom ? `
+                                        <button type="button" class="social-more-btn" data-action="upload-custom-social-icon" data-social-index="${index}" title="Upload ícone" style="width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center;">
+                                            <i class="fas fa-upload"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button type="button" class="btn-clear-url social-link-delete" data-delete-social-index="${index}" title="Deletar" style="width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                }).join('')}
+                </div>
+            </div>
+        `;
+
+        ['iconSize', 'align'].forEach(propName => {
+            const propMeta = ComponentRegistry.getPropertyMeta(propName);
+            if (!propMeta) return;
+            const currentValue = this.currentComponent.properties[propName];
+            html += this.renderControl(propName, propMeta, currentValue);
+        });
+
+        html += this.renderSocialNetworksModal(availableNetworks, iconMap, getLocalIconUrl);
+
+        return html;
+    },
+
+    renderSocialNetworksModal(networks, iconMap, getLocalIconUrl) {
+        const buttons = (networks || []).map(n => {
+            const icon = iconMap[n] || 'fa-globe';
+            const isFab = icon !== 'fa-globe';
+            const iconClass = isFab ? `fab ${icon}` : `fas ${icon}`;
+            const localIconUrl = typeof getLocalIconUrl === 'function' ? getLocalIconUrl(n) : '';
+            return `
+                <button type="button" class="social-network-btn" data-network="${n}" title="${n}">
+                    ${localIconUrl
+                    ? `<img src="${localIconUrl}" alt="${n}" style="width: 22px; height: 22px; object-fit: contain; filter: brightness(0) invert(1);" />`
+                    : `<i class="${iconClass}"></i>`}
+                </button>
+            `;
+        }).join('');
+
+        return `
+            <div class="modal" id="socialNetworksModal">
+                <div class="modal-content" style="max-width: 520px;">
+                    <div class="modal-header">
+                        <h2>Adicionar redes</h2>
+                        <button class="modal-close" type="button" data-action="close-social-networks">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="social-network-grid">
+                            ${buttons}
+                        </div>
+                        <div style="margin-top: 0.75rem; color: var(--editor-text-muted); font-size: 0.85rem;">
+                            Clique em um ícone para adicionar. Você pode adicionar quantas vezes quiser (duplicatas).
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     },
 
     // Render individual control
@@ -64,16 +271,31 @@ const PropertiesPanel = {
             case 'url':
                 const isImageUrl = (propName === 'src' || propName === 'logoSrc');
                 const labelIcon = propMeta.icon ? `<i class="fab ${propMeta.icon}" style="margin-right: 5px; color: var(--editor-primary);"></i>` : '';
+                const showClearUrlBtn = propMeta.type === 'url' && !!propMeta.icon;
                 control = `
                     <div class="property-group">
                         <label class="property-label">${labelIcon}${propMeta.label}</label>
-                        <input 
-                            type="text" 
-                            class="property-input" 
-                            data-property="${propName}"
-                            value="${currentValue || ''}"
-                            placeholder="${propMeta.placeholder || ''}"
-                        >
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input 
+                                type="text" 
+                                class="property-input" 
+                                data-property="${propName}"
+                                value="${currentValue || ''}"
+                                placeholder="${propMeta.placeholder || ''}"
+                                style="flex: 1;"
+                            >
+                            ${showClearUrlBtn ? `
+                                <button 
+                                    type="button"
+                                    class="btn-clear-url"
+                                    data-clear-property="${propName}"
+                                    title="Remover URL"
+                                    style="width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
                         ${isImageUrl ? `
                             <button class="btn-upload" data-upload="${propName}" style="margin-top: 0.5rem;">
                                 <i class="fas fa-upload"></i> Upload Imagem
@@ -218,6 +440,217 @@ const PropertiesPanel = {
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => this.handleDelete());
         }
+
+        const addCustomSocialBtn = this.container.querySelector('[data-action="add-custom-social"]');
+        if (addCustomSocialBtn) {
+            addCustomSocialBtn.addEventListener('click', () => {
+                const currentLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                    ? [...this.currentComponent.properties.socialLinks]
+                    : [];
+
+                currentLinks.push({ type: 'custom', url: 'https://', iconSrc: '' });
+
+                this.updateProperty('socialLinks', currentLinks);
+                this.currentComponent.properties.socialLinks = currentLinks;
+                this.render();
+
+                if (typeof HistoryManager !== 'undefined') {
+                    HistoryManager.saveState(EditorCanvas.currentTemplate);
+                }
+            });
+        }
+
+        const openSocialNetworksBtn = this.container.querySelector('[data-action="open-social-networks"]');
+        if (openSocialNetworksBtn) {
+            openSocialNetworksBtn.addEventListener('click', () => {
+                const modal = document.getElementById('socialNetworksModal');
+                if (modal) modal.classList.add('active');
+            });
+        }
+
+        const closeSocialNetworksBtn = this.container.querySelector('[data-action="close-social-networks"]');
+        if (closeSocialNetworksBtn) {
+            closeSocialNetworksBtn.addEventListener('click', () => {
+                const modal = document.getElementById('socialNetworksModal');
+                if (modal) modal.classList.remove('active');
+            });
+        }
+
+        const socialNetworksModal = this.container.querySelector('#socialNetworksModal');
+        if (socialNetworksModal) {
+            socialNetworksModal.addEventListener('click', (e) => {
+                if (e.target === socialNetworksModal) {
+                    socialNetworksModal.classList.remove('active');
+                }
+            });
+
+            const networkBtns = socialNetworksModal.querySelectorAll('.social-network-btn');
+            networkBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const network = btn.dataset.network;
+                    if (!network) return;
+
+                    const defaultUrlMap = {
+                        facebook: 'https://facebook.com',
+                        instagram: 'https://instagram.com',
+                        whatsapp: 'https://whatsapp.com',
+                        twitter: 'https://twitter.com',
+                        linkedin: 'https://linkedin.com',
+                        youtube: 'https://youtube.com',
+                        reddit: 'https://reddit.com',
+                        pinterest: 'https://pinterest.com',
+                        tiktok: 'https://tiktok.com',
+                        telegram: 'https://t.me',
+                        discord: 'https://discord.com',
+                        github: 'https://github.com',
+                        snapchat: 'https://snapchat.com'
+                    };
+
+                    const currentLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                        ? [...this.currentComponent.properties.socialLinks]
+                        : [];
+
+                    currentLinks.push({ type: network, url: defaultUrlMap[network] || 'https://' });
+
+                    this.updateProperty('socialLinks', currentLinks);
+                    this.currentComponent.properties.socialLinks = currentLinks;
+                    this.render();
+
+                    if (typeof HistoryManager !== 'undefined') {
+                        HistoryManager.saveState(EditorCanvas.currentTemplate);
+                    }
+                });
+            });
+        }
+
+        const uploadCustomIconBtns = this.container.querySelectorAll('[data-action="upload-custom-social-icon"]');
+        uploadCustomIconBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.socialIndex, 10);
+                if (Number.isNaN(index)) return;
+
+                const currentLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                    ? [...this.currentComponent.properties.socialLinks]
+                    : [];
+
+                if (index < 0 || index >= currentLinks.length) return;
+                if (!currentLinks[index] || currentLinks[index].type !== 'custom') return;
+
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+
+                input.onchange = (e) => {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith('image/')) {
+                        alert('Por favor, selecione apenas arquivos de imagem.');
+                        return;
+                    }
+
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('Imagem muito grande! Tamanho máximo: 2MB');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const base64 = event.target.result;
+                        const nextLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                            ? [...this.currentComponent.properties.socialLinks]
+                            : [];
+
+                        if (index < 0 || index >= nextLinks.length) return;
+                        nextLinks[index] = { ...nextLinks[index], iconSrc: base64 };
+
+                        this.updateProperty('socialLinks', nextLinks);
+                        this.currentComponent.properties.socialLinks = nextLinks;
+                        this.render();
+
+                        if (typeof HistoryManager !== 'undefined') {
+                            HistoryManager.saveState(EditorCanvas.currentTemplate);
+                        }
+                    };
+                    reader.onerror = () => {
+                        alert('Erro ao carregar imagem. Tente novamente.');
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                input.click();
+            });
+        });
+
+        // Social links list: delete item
+        const deleteSocialBtns = this.container.querySelectorAll('[data-delete-social-index]');
+        deleteSocialBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.deleteSocialIndex, 10);
+                if (Number.isNaN(index)) return;
+
+                const currentLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                    ? [...this.currentComponent.properties.socialLinks]
+                    : [];
+
+                if (index < 0 || index >= currentLinks.length) return;
+                currentLinks.splice(index, 1);
+
+                this.updateProperty('socialLinks', currentLinks);
+                this.currentComponent.properties.socialLinks = currentLinks;
+                this.render();
+
+                if (typeof HistoryManager !== 'undefined') {
+                    HistoryManager.saveState(EditorCanvas.currentTemplate);
+                }
+            });
+        });
+
+        // Social links list: edit URL
+        const socialLinkInputs = this.container.querySelectorAll('.social-link-input');
+        socialLinkInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.socialIndex, 10);
+                if (Number.isNaN(index)) return;
+
+                const currentLinks = Array.isArray(this.currentComponent.properties.socialLinks)
+                    ? [...this.currentComponent.properties.socialLinks]
+                    : [];
+
+                if (index < 0 || index >= currentLinks.length) return;
+                currentLinks[index] = { ...currentLinks[index], url: e.target.value };
+
+                this.updateProperty('socialLinks', currentLinks);
+                this.currentComponent.properties.socialLinks = currentLinks;
+
+                clearTimeout(this.historyTimeout);
+                this.historyTimeout = setTimeout(() => {
+                    if (typeof HistoryManager !== 'undefined') {
+                        HistoryManager.saveState(EditorCanvas.currentTemplate);
+                    }
+                }, 500);
+            });
+        });
+
+        // Clear URL buttons (generic)
+        const clearUrlBtns = this.container.querySelectorAll('.btn-clear-url:not(.social-link-delete)');
+        clearUrlBtns.forEach(btn => {
+            const propName = btn.dataset.clearProperty;
+            btn.addEventListener('click', () => {
+                if (!propName) return;
+
+                const input = this.container.querySelector(`[data-property="${propName}"]`);
+                if (input) {
+                    input.value = '';
+                }
+
+                this.updateProperty(propName, '');
+
+                if (typeof HistoryManager !== 'undefined') {
+                    HistoryManager.saveState(EditorCanvas.currentTemplate);
+                }
+            });
+        });
 
         // Upload buttons
         const uploadBtns = this.container.querySelectorAll('.btn-upload');

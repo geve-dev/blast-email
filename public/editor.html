@@ -423,13 +423,13 @@
             // Create a temporary div to parse the HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
+
             // Remove editor-specific classes and styles
             const elements = tempDiv.querySelectorAll('*');
             elements.forEach(el => {
                 // Remove editor-specific classes
                 el.classList.remove('editable-element', 'selected');
-                
+
                 // Remove inline styles that might affect appearance
                 el.style.outline = '';
                 el.style.outlineOffset = '';
@@ -439,7 +439,7 @@
                 el.style.cursor = '';
                 el.style.transition = '';
             });
-            
+
             // Return the cleaned HTML
             return tempDiv.innerHTML;
         }
@@ -463,8 +463,8 @@
                 return;
             }
 
-            // Obter o conteúdo HTML do iframe de visualização e limpar classes e estilos do editor
-            const emailContent = cleanEmailHTML(document.getElementById('previewFrame').contentDocument.documentElement.outerHTML);
+            // Gerar o HTML final compatível com email a partir do template
+            const emailContent = HTMLExporter.export(EditorCanvas.currentTemplate);
 
             // Mostrar indicador de carregamento
             const sendBtn = document.querySelector('#sendEmailModal .btn-success');
