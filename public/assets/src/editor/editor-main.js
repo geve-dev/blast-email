@@ -157,14 +157,13 @@ function initBlankTemplate() {
     EditorCanvas.currentTemplate = {
         components: [],
         globalStyles: {},
-        metadata: { name: 'Template em Branco' }
+        metadata: { name: 'Template em Branco', backgroundColor: '#ffffff' }
     };
 
-    // Show canvas, hide empty state
+    // Show canvas
     document.getElementById('canvasContainer').classList.add('active');
-    document.getElementById('emptyState').style.display = 'none';
 
-    // CRITICAL: Render the empty canvas to show the white iframe
+    // CRITICAL: Render the empty canvas to show the white iframe (placeholder will be shown via render())
     EditorCanvas.render();
 
     console.log('📄 Template em branco inicializado - Canvas vazio pronto para arrastar componentes');

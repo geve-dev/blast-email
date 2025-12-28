@@ -53,6 +53,20 @@ const EditorCanvas = {
 
         // Attach event listeners after iframe loads
         this.attachEventListeners();
+
+        // Allow clicking the empty placeholder (outside iframe) to select the template
+        const emptyPlaceholder = document.getElementById('emptyState');
+        if (emptyPlaceholder) {
+            emptyPlaceholder.addEventListener('click', (ev) => {
+                const container = document.getElementById('canvasContainer');
+                if (container) container.classList.add('template-selected');
+                if (typeof PropertiesPanel !== 'undefined' && typeof PropertiesPanel.showTemplate === 'function') {
+                    PropertiesPanel.showTemplate();
+                } else if (typeof PropertiesPanel !== 'undefined') {
+                    PropertiesPanel.showEmptyState();
+                }
+            });
+        }
     },
 
     // Attach event listeners to iframe
@@ -82,9 +96,16 @@ const EditorCanvas = {
 
         this.render();
 
-        // Show canvas, hide empty state
+        // Show canvas
         document.getElementById('canvasContainer').classList.add('active');
-        document.getElementById('emptyState').style.display = 'none';
+
+        // Show or hide empty state depending on whether template has components
+        const emptyEl = document.getElementById('emptyState');
+        if (this.currentTemplate && Array.isArray(this.currentTemplate.components) && this.currentTemplate.components.length > 0) {
+            if (emptyEl) emptyEl.style.display = 'none';
+        } else {
+            if (emptyEl) emptyEl.style.display = 'block';
+        }
     },
 
     // Render template in iframe
@@ -92,13 +113,27 @@ const EditorCanvas = {
         if (!this.currentTemplate) return;
 
         const body = this.iframeDoc.body;
+
+        // Apply template background color to preview canvas
+        const bg = (this.currentTemplate.metadata && this.currentTemplate.metadata.backgroundColor) ? this.currentTemplate.metadata.backgroundColor : '#fff';
+        try {
+            body.style.background = bg;
+        } catch (e) {
+            // ignore if iframe not ready
+        }
+
         body.innerHTML = '';
 
-        // If no components, just show empty white canvas
+        // Manage empty state placeholder
+        const emptyEl = document.getElementById('emptyState');
         if (!this.currentTemplate.components || this.currentTemplate.components.length === 0) {
-            // Empty canvas - ready to receive components
+            // Show placeholder
+            if (emptyEl) emptyEl.style.display = 'block';
             console.log('Canvas vazio - arraste componentes da biblioteca');
             return;
+        } else {
+            // Hide placeholder when there are components
+            if (emptyEl) emptyEl.style.display = 'none';
         }
 
         // Render each component
@@ -334,9 +369,27 @@ const EditorCanvas = {
     // Render image component
     renderImage(component) {
         const { src, alt, width, align } = component.properties;
+        const safeWidth = width || '200px';
+
+        // If there's no image source, show an image SVG placeholder (works even without Font Awesome)
+        if (!src || String(src).trim() === '') {
+            return `
+                <div style="text-align: ${align || 'center'}; margin: 20px 0;">
+                    <div class="image-placeholder" style="display:inline-flex; align-items:center; justify-content:center; width:${safeWidth}; min-height: 80px; border:2px dashed #ddd; padding:20px; color:#999; border-radius:6px; background:#fafafa;">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                            <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
+                            <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" />
+                            <path d="M21 17l-6-6-4 4-5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                        </svg>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render image and fall back to icon if loading fails
         return `
             <div style="text-align: ${align || 'center'}; margin: 20px 0;">
-                <img src="${src}" alt="${alt}" style="max-width: ${width}; height: auto;">
+                <img src="${src}" alt="${alt || ''}" style="max-width: ${width || '100%'}; height: auto;" onerror="this.outerHTML='<div class=\\'image-placeholder\\' style=\\'display:inline-flex;align-items:center;justify-content:center;width:${safeWidth};min-height:80px;border:2px dashed #ddd;padding:20px;color:#999;border-radius:6px;background:#fafafa;\\'>\\n                            <svg width=\\'36\\' height=\\'36\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' xmlns=\\'http://www.w3.org/2000/svg\\' style=\\'display:block;\\'>\\n                                <rect x=\\'2\\' y=\\'3\\' width=\\'20\\' height=\\'14\\' rx=\\'2\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\' fill=\\'none\\' />\\n                                <circle cx=\\'7.5\\' cy=\\'7.5\\' r=\\'1.5\\' fill=\\'currentColor\\' />\\n                                <path d=\\'M21 17l-6-6-4 4-5-5\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' fill=\\'none\\' />\\n                            </svg>\\n                        </div>'">
             </div>
         `;
     },
@@ -356,7 +409,7 @@ const EditorCanvas = {
 
         return `
             <div style="background: ${backgroundColor}; padding: 20px; text-align: ${align || 'center'};">
-                <img src="${src || 'https://via.placeholder.com/200x50'}" alt="Logo" style="width: ${logoWidth}; margin-bottom: 15px;">
+                ${src ? `<img src="${src}" alt="Logo" style="width: ${logoWidth}; margin-bottom: 15px;">` : `<div class="image-placeholder" style="display:inline-flex;align-items:center;justify-content:center;width:${logoWidth || '200px'};min-height:50px;border:2px dashed #ddd;padding:10px;color:#999;border-radius:6px;margin-bottom:15px;background:#fafafa;">\n                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">\n                                <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />\n                                <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" />\n                                <path d="M21 17l-6-6-4 4-5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />\n                            </svg>\n                        </div>`}
                 ${menuHTML ? `<div style="margin-top: 15px;">${menuHTML}</div>` : ''}
             </div>
         `;
@@ -489,11 +542,33 @@ const EditorCanvas = {
     handleElementClick(e) {
         e.preventDefault();
 
+        const container = document.getElementById('canvasContainer');
+
         // Find closest editable element
         const element = e.target.closest('.editable-element');
-        if (!element) return;
 
-        // Deselect previous
+        // If clicked outside any editable element, select the template (canvas)
+        if (!element) {
+            // Deselect previously selected component
+            if (this.selectedElement) {
+                this.selectedElement.classList.remove('selected');
+                this.selectedElement = null;
+            }
+
+            // Mark template as selected (visual) and show template properties
+            if (container) container.classList.add('template-selected');
+            if (typeof PropertiesPanel !== 'undefined' && typeof PropertiesPanel.showTemplate === 'function') {
+                PropertiesPanel.showTemplate();
+            } else if (typeof PropertiesPanel !== 'undefined') {
+                PropertiesPanel.showEmptyState();
+            }
+            return;
+        }
+
+        // If a component is selected, remove template visual selection
+        if (container) container.classList.remove('template-selected');
+
+        // Deselect previous component element
         if (this.selectedElement) {
             this.selectedElement.classList.remove('selected');
         }
