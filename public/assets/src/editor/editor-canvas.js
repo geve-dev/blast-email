@@ -183,19 +183,33 @@ const EditorCanvas = {
         const draggingId = e.dataTransfer.getData('reorderComponentId');
         if (!draggingId) return;
 
-        const target = e.target.closest('.editable-element');
-        if (!target || target.dataset.componentId === draggingId) return;
+        const elements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
+        if (!elements.length) return;
 
-        // Show drop indicator
-        const rect = target.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
+        // Clear previous indicators
+        elements.forEach(el => {
+            el.style.borderTop = '';
+            el.style.borderBottom = '';
+        });
 
-        if (e.clientY < midpoint) {
-            target.style.borderTop = '3px solid #00ffd0';
-            target.style.borderBottom = '';
-        } else {
-            target.style.borderBottom = '3px solid #00ffd0';
-            target.style.borderTop = '';
+        const dropY = e.clientY;
+        let marked = false;
+
+        for (let el of elements) {
+            if (el.dataset.componentId === draggingId) continue;
+            const rect = el.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            if (dropY < midpoint) {
+                el.style.borderTop = '3px solid #00ffd0';
+                marked = true;
+                break;
+            }
+        }
+
+        if (!marked) {
+            // If not marked, show indicator at bottom of last non-dragging element (append)
+            const last = [...elements].reverse().find(el => el.dataset.componentId !== draggingId);
+            if (last) last.style.borderBottom = '3px solid #00ffd0';
         }
     },
 
@@ -216,26 +230,43 @@ const EditorCanvas = {
         const draggingId = e.dataTransfer.getData('reorderComponentId');
         if (!draggingId) return;
 
-        const target = e.target.closest('.editable-element');
-        if (!target || target.dataset.componentId === draggingId) return;
+        const elements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
+        if (!elements.length) return;
 
-        // Clear drop indicators
-        target.style.borderTop = '';
-        target.style.borderBottom = '';
+        // Clear all indicators
+        elements.forEach(el => {
+            el.style.borderTop = '';
+            el.style.borderBottom = '';
+        });
 
-        // Get positions
+        const dropY = e.clientY;
+        let found = null;
+
+        for (let el of elements) {
+            if (el.dataset.componentId === draggingId) continue;
+            const rect = el.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            if (dropY < midpoint) {
+                found = el;
+                break;
+            }
+        }
+
+        const flat = this.getFlatComponents();
         const draggedIndex = this.findComponentIndex(draggingId);
-        const targetIndex = this.findComponentIndex(target.dataset.componentId);
+        if (draggedIndex === -1) return;
 
-        if (draggedIndex === -1 || targetIndex === -1) return;
-
-        // Determine drop position
-        const rect = target.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-        const dropBefore = e.clientY < midpoint;
-
-        // Reorder components
-        this.reorderComponents(draggedIndex, targetIndex, dropBefore);
+        if (found) {
+            const targetIndex = this.findComponentIndex(found.dataset.componentId);
+            if (targetIndex === -1) return;
+            const dropBefore = true;
+            this.reorderComponents(draggedIndex, targetIndex, dropBefore);
+        } else {
+            // Append to end
+            const toIndex = flat.length - 1;
+            const dropBefore = false;
+            this.reorderComponents(draggedIndex, toIndex, dropBefore);
+        }
     },
 
     // Handle component drag end
