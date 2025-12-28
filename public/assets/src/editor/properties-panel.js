@@ -11,20 +11,8 @@ const PropertiesPanel = {
 
     // Show properties for selected component
     showProperties(component) {
-        // When showing component properties, remove any template selection visual
-        const container = document.getElementById('canvasContainer');
-        if (container) container.classList.remove('template-selected');
-        this.templateSelected = false;
-
         this.currentComponent = component;
         this.render();
-    },
-
-    // Show template properties (when template/canvas is explicitly selected)
-    showTemplate() {
-        this.currentComponent = null;
-        this.templateSelected = true;
-        this.showEmptyState();
     },
 
     // Render property controls
@@ -352,7 +340,7 @@ const PropertiesPanel = {
                                 data-property="${propName}-text"
                                 value="${colorValue}"
                                 style="flex: 1;"
-                                placeholder="#rrggbb"
+                                readonly
                             >
                         </div>
                     </div>
@@ -696,38 +684,7 @@ const PropertiesPanel = {
 
         inputs.forEach(input => {
             const property = input.dataset.property;
-            if (!property) return;
-
-            // Handle the editable hex text inputs (e.g. 'backgroundColor-text')
-            if (property.endsWith('-text')) {
-                const targetProp = property.slice(0, -5); // remove '-text'
-                input.addEventListener('input', (e) => {
-                    let val = String(e.target.value || '').trim();
-
-                    // Allow values like 'fff' or '#fff' or 'ffffff' or '#ffffff'
-                    const m = val.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
-                    if (m) {
-                        const hex = '#' + m[1].toLowerCase();
-
-                        // Update color input if present
-                        const colorInput = this.container.querySelector(`[data-property="${targetProp}"]`);
-                        if (colorInput) colorInput.value = hex;
-
-                        // Update property
-                        this.updateProperty(targetProp, hex);
-
-                        // Save history (debounced)
-                        clearTimeout(this.historyTimeout);
-                        this.historyTimeout = setTimeout(() => {
-                            if (typeof HistoryManager !== 'undefined') {
-                                HistoryManager.saveState(EditorCanvas.currentTemplate);
-                            }
-                        }, 500);
-                    }
-                });
-
-                return;
-            }
+            if (!property || property.endsWith('-text')) return;
 
             if (input.type === 'range') {
                 input.addEventListener('input', (e) => {
@@ -765,43 +722,15 @@ const PropertiesPanel = {
         });
     },
 
-    // Update component property or template property when no component selected
+    // Update component property
     updateProperty(property, value) {
-        // If no component is selected and the property is the template background, update template
-        if (!this.currentComponent) {
-            if (property === 'backgroundColor') {
-                this.updateTemplateBackground(value);
-            }
-            return;
-        }
+        if (!this.currentComponent) return;
 
         // Update in canvas
         EditorCanvas.updateComponent(this.currentComponent.id, property, value);
 
         // Update current component reference
         this.currentComponent.properties[property] = value;
-    },
-
-    // Atualiza cor de fundo do template
-    updateTemplateBackground(color) {
-        if (!EditorCanvas.currentTemplate) return;
-        EditorCanvas.currentTemplate.metadata = EditorCanvas.currentTemplate.metadata || {};
-        EditorCanvas.currentTemplate.metadata.backgroundColor = color;
-
-        // Aplicar imediatamente no iframe do canvas
-        try {
-            if (EditorCanvas.iframe && EditorCanvas.iframe.contentDocument && EditorCanvas.iframe.contentDocument.body) {
-                EditorCanvas.iframe.contentDocument.body.style.background = color;
-            }
-        } catch (e) {
-            // ignore
-        }
-
-        if (typeof HistoryManager !== 'undefined') {
-            HistoryManager.saveState(EditorCanvas.currentTemplate);
-        }
-
-        console.log(`Cor de fundo do template atualizada: ${color}`);
     },
 
     // Handle delete component
@@ -859,31 +788,13 @@ const PropertiesPanel = {
         fileInput.click();
     },
 
-    // Show empty state (or template properties when template is selected)
+    // Show empty state
     showEmptyState() {
-        const bgColor = (EditorCanvas.currentTemplate && EditorCanvas.currentTemplate.metadata && EditorCanvas.currentTemplate.metadata.backgroundColor) ? EditorCanvas.currentTemplate.metadata.backgroundColor : '#fafafa';
-        const title = this.templateSelected ? 'Template selecionado — editar propriedades do template' : 'Selecione um elemento para editar suas propriedades';
-        const icon = this.templateSelected ? '<i class="fas fa-palette" style="color: var(--editor-primary);"></i>' : '<i class="fas fa-mouse-pointer"></i>';
-
         this.container.innerHTML = `
             <div class="panel-empty-state">
-                ${icon}
-                <p>${title}</p>
-            </div>
-
-            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 1rem;">
-                <h3 style="margin: 0 0 0.5rem 0;">Configurações do template</h3>
-                <div class="property-group">
-                    <label class="property-label">Cor de fundo do email</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="color" class="property-input" data-property="backgroundColor" value="${bgColor}" style="width:60px; height:40px; padding:5px;">
-                        <input type="text" class="property-input" data-property="backgroundColor-text" value="${bgColor}" style="flex:1;" placeholder="#rrggbb">
-                    </div>
-                </div>
+                <i class="fas fa-mouse-pointer"></i>
+                <p>Selecione um elemento para editar suas propriedades</p>
             </div>
         `;
-
-        // Attach generic listeners (handled by attachEventListeners)
-        this.attachEventListeners();
     }
 };

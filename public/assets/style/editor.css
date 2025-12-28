@@ -283,11 +283,6 @@ body {
     display: block;
 }
 
-.canvas-container.template-selected {
-    outline: 3px solid var(--editor-primary);
-    outline-offset: 6px;
-}
-
 .canvas-container.mobile {
     width: 375px;
 }

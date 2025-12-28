@@ -23,15 +23,12 @@ const TemplateParser = {
             }
         });
 
-        const wrapper = doc.querySelector('.es-wrapper') || emailBody;
-        const bg = this.getBackgroundColor(wrapper);
-
         return {
             components,
             globalStyles: this.extractGlobalStyles(cssString),
             metadata: {
                 width: '600px',
-                backgroundColor: bg || '#fafafa'
+                backgroundColor: '#fafafa'
             }
         };
     },

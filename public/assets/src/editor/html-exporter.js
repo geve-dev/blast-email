@@ -43,7 +43,7 @@ const HTMLExporter = {
     <![endif]-->
     <!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]-->
     <style type="text/css">
-        ${this.getEmailCSS(metadata)}
+        ${this.getEmailCSS()}
     </style>
 </head>
 <body class="body">
@@ -61,7 +61,6 @@ const HTMLExporter = {
 </body>
 </html>`;
     },
-
 
     // Build individual component HTML
     buildComponent(component) {
@@ -529,14 +528,13 @@ const HTMLExporter = {
 </table>`;
     },
 
-    // Get email-compatible CSS (respects metadata backgroundColor when provided)
-    getEmailCSS(metadata) {
-        const bg = (metadata && metadata.backgroundColor) ? metadata.backgroundColor : '#fafafa';
+    // Get email-compatible CSS
+    getEmailCSS() {
         return `
             body { margin: 0; padding: 0; }
             table { border-collapse: collapse; }
             img { border: 0; display: block; }
-            .es-wrapper { width: 100%; background-color: ${bg}; }
+            .es-wrapper { width: 100%; background-color: #fafafa; }
             .es-content-body { background-color: #ffffff; }
         `;
     }
