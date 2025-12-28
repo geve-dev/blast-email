@@ -356,7 +356,7 @@ const EditorCanvas = {
 
         return `
             <div style="background: ${backgroundColor}; padding: 20px; text-align: ${align || 'center'};">
-                <img src="${src || 'https://via.placeholder.com/200x50'}" alt="Logo" style="width: ${logoWidth}; margin-bottom: 15px;">
+                <img src="${src || 'https://cdn-icons-png.flaticon.com/64/4211/4211763.png'}" alt="Logo" style="width: ${logoWidth}; margin-bottom: 15px;">
                 ${menuHTML ? `<div style="margin-top: 15px;">${menuHTML}</div>` : ''}
             </div>
         `;

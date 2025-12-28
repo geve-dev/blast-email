@@ -52,7 +52,7 @@ const ComponentRegistry = {
             category: 'media',
             editableProps: ['src', 'alt', 'width', 'link', 'align'],
             defaultValues: {
-                src: 'https://via.placeholder.com/600x300',
+                src: 'https://cdn-icons-png.flaticon.com/64/4211/4211763.png',
                 alt: 'Imagem',
                 width: '100%',
                 link: '',
@@ -81,8 +81,8 @@ const ComponentRegistry = {
             category: 'layout',
             editableProps: ['src', 'logoWidth', 'backgroundColor', 'align', 'menu1Text', 'menu1Url', 'menu2Text', 'menu2Url', 'menu3Text', 'menu3Url', 'menu4Text', 'menu4Url'],
             defaultValues: {
-                src: 'https://via.placeholder.com/200x50',
-                logoWidth: '200px',
+                src: 'https://cdn-icons-png.flaticon.com/64/4211/4211763.png',
+                logoWidth: '100px',
                 backgroundColor: '#ffffff',
                 align: 'center',
                 menu1Text: 'Home',
