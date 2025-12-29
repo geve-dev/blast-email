@@ -31,18 +31,99 @@ const EditorCanvas = {
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
                 <style>
                     body { margin: 0; padding: 20px; font-family: Arial, sans-serif; min-height: 100vh; box-sizing: border-box; background: #fff; }
-                    .editable-element { position: relative; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+                    
+                    /* Base styles for editable elements */
+                    .editable-element { 
+                        position: relative; 
+                        cursor: pointer; 
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        margin: 8px 0;
+                        border-radius: 4px;
+                    }
+                    
+                    /* Enhanced hover state */
                     .editable-element:hover { 
                         outline: 2px solid var(--editor-primary, #00ffd0); 
                         outline-offset: 4px;
-                        background: rgba(0, 255, 208, 0.05);
+                        background: rgba(0, 255, 208, 0.08);
                         z-index: 10;
+                        transform: translateY(-1px);
+                        box-shadow: 0 2px 8px rgba(0, 255, 208, 0.15);
                     }
+                    
+                    /* Selected state */
                     .editable-element.selected { 
                         outline: 3px solid var(--editor-primary, #00ffd0); 
                         outline-offset: 4px;
-                        background: rgba(0, 255, 208, 0.1); 
+                        background: rgba(0, 255, 208, 0.12); 
                         z-index: 11;
+                        box-shadow: 0 4px 12px rgba(0, 255, 208, 0.2);
+                    }
+                    
+                    /* Dragging state - element being dragged */
+                    .editable-element.dragging-component {
+                        opacity: 0.5;
+                        transform: scale(0.98);
+                        box-shadow: 0 8px 24px rgba(0, 255, 208, 0.3);
+                        outline: 3px dashed var(--editor-primary, #00ffd0);
+                        outline-offset: 4px;
+                        z-index: 1000;
+                        cursor: grabbing !important;
+                    }
+                    
+                    /* Drop zone indicator - all elements during drag */
+                    .editable-element.drag-over-zone {
+                        border: 2px solid rgba(0, 255, 208, 0.3);
+                        border-radius: 4px;
+                        background: rgba(0, 255, 208, 0.03);
+                        transition: all 0.2s ease;
+                    }
+                    
+                    /* Drop target indicator - where element will be inserted */
+                    .editable-element.drop-target-top {
+                        border-top: 4px solid var(--editor-primary, #00ffd0) !important;
+                        border-top-left-radius: 8px;
+                        border-top-right-radius: 8px;
+                        padding-top: 8px;
+                        margin-top: 12px;
+                        box-shadow: 0 -4px 12px rgba(0, 255, 208, 0.4);
+                        background: rgba(0, 255, 208, 0.05);
+                    }
+                    
+                    .editable-element.drop-target-bottom {
+                        border-bottom: 4px solid var(--editor-primary, #00ffd0) !important;
+                        border-bottom-left-radius: 8px;
+                        border-bottom-right-radius: 8px;
+                        padding-bottom: 8px;
+                        margin-bottom: 12px;
+                        box-shadow: 0 4px 12px rgba(0, 255, 208, 0.4);
+                        background: rgba(0, 255, 208, 0.05);
+                    }
+                    
+                    /* Smooth reordering animation */
+                    .editable-element.reordering {
+                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                                    opacity 0.3s ease,
+                                    margin 0.3s ease;
+                    }
+                    
+                    /* Drop indicator line */
+                    .drop-indicator {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        height: 4px;
+                        background: var(--editor-primary, #00ffd0);
+                        border-radius: 2px;
+                        box-shadow: 0 0 12px rgba(0, 255, 208, 0.6);
+                        z-index: 999;
+                        pointer-events: none;
+                        animation: pulse-drop 1.5s ease-in-out infinite;
+                    }
+                    
+                    @keyframes pulse-drop {
+                        0%, 100% { opacity: 0.6; transform: scaleY(1); }
+                        50% { opacity: 1; transform: scaleY(1.2); }
                     }
                 </style>
             </head>
@@ -170,8 +251,19 @@ const EditorCanvas = {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('reorderComponentId', componentId);
 
-        e.target.style.opacity = '1';
-        e.target.classList.add('dragging-component');
+        // Add dragging class for visual feedback
+        const draggingElement = e.target.closest('.editable-element');
+        if (draggingElement) {
+            draggingElement.classList.add('dragging-component');
+            
+            // Add drag-over-zone class to all other elements
+            const allElements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
+            allElements.forEach(el => {
+                if (el.dataset.componentId !== componentId) {
+                    el.classList.add('drag-over-zone');
+                }
+            });
+        }
     },
 
     // Handle component drag over (for reordering)
@@ -186,39 +278,78 @@ const EditorCanvas = {
         const elements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
         if (!elements.length) return;
 
-        // Clear previous indicators
+        // Clear previous drop target indicators
         elements.forEach(el => {
-            el.style.borderTop = '';
-            el.style.borderBottom = '';
+            el.classList.remove('drop-target-top', 'drop-target-bottom');
         });
+        
+        // Remove all existing drop indicators
+        const allIndicators = this.iframeDoc.querySelectorAll('.drop-indicator');
+        allIndicators.forEach(ind => ind.remove());
 
         const dropY = e.clientY;
         let marked = false;
 
+        // Find the drop target
         for (let el of elements) {
             if (el.dataset.componentId === draggingId) continue;
+            
             const rect = el.getBoundingClientRect();
             const midpoint = rect.top + rect.height / 2;
+            
             if (dropY < midpoint) {
-                el.style.borderTop = '3px solid #00ffd0';
+                // Insert before this element
+                el.classList.add('drop-target-top');
+                
+                // Add visual drop indicator line above the element
+                const bodyRect = this.iframeDoc.body.getBoundingClientRect();
+                const indicator = this.iframeDoc.createElement('div');
+                indicator.className = 'drop-indicator';
+                indicator.style.position = 'absolute';
+                indicator.style.left = '0';
+                indicator.style.right = '0';
+                indicator.style.top = `${rect.top - bodyRect.top - 2}px`;
+                indicator.style.width = '100%';
+                this.iframeDoc.body.appendChild(indicator);
+                
                 marked = true;
                 break;
             }
         }
 
         if (!marked) {
-            // If not marked, show indicator at bottom of last non-dragging element (append)
+            // Insert at the end - show indicator at bottom of last non-dragging element
             const last = [...elements].reverse().find(el => el.dataset.componentId !== draggingId);
-            if (last) last.style.borderBottom = '3px solid #00ffd0';
+            if (last) {
+                last.classList.add('drop-target-bottom');
+                
+                // Add visual drop indicator line below the last element
+                const rect = last.getBoundingClientRect();
+                const bodyRect = this.iframeDoc.body.getBoundingClientRect();
+                const indicator = this.iframeDoc.createElement('div');
+                indicator.className = 'drop-indicator';
+                indicator.style.position = 'absolute';
+                indicator.style.left = '0';
+                indicator.style.right = '0';
+                indicator.style.top = `${rect.bottom - bodyRect.top + 2}px`;
+                indicator.style.width = '100%';
+                this.iframeDoc.body.appendChild(indicator);
+            }
         }
     },
 
     // Handle component drag leave
     handleComponentDragLeave(e) {
+        // Only clear if we're actually leaving the element (not just moving to a child)
+        const relatedTarget = e.relatedTarget;
         const target = e.target.closest('.editable-element');
-        if (target) {
-            target.style.borderTop = '';
-            target.style.borderBottom = '';
+        
+        if (target && (!relatedTarget || !target.contains(relatedTarget))) {
+            target.classList.remove('drop-target-top', 'drop-target-bottom');
+            const indicator = target.querySelector('.drop-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         }
     },
 
@@ -235,9 +366,16 @@ const EditorCanvas = {
 
         // Clear all indicators
         elements.forEach(el => {
-            el.style.borderTop = '';
-            el.style.borderBottom = '';
+            el.classList.remove('drop-target-top', 'drop-target-bottom', 'drag-over-zone');
+            const indicator = el.querySelector('.drop-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         });
+        
+        // Remove all drop indicators from body
+        const allIndicators = this.iframeDoc.querySelectorAll('.drop-indicator');
+        allIndicators.forEach(ind => ind.remove());
 
         const dropY = e.clientY;
         let found = null;
@@ -271,15 +409,24 @@ const EditorCanvas = {
 
     // Handle component drag end
     handleComponentDragEnd(e) {
-        e.target.style.opacity = '';
-        e.target.classList.remove('dragging-component');
+        const draggingElement = e.target.closest('.editable-element');
+        if (draggingElement) {
+            draggingElement.classList.remove('dragging-component');
+        }
 
-        // Clear all drop indicators
+        // Clear all drop indicators and visual states
         const elements = this.iframeDoc.querySelectorAll('.editable-element');
         elements.forEach(el => {
-            el.style.borderTop = '';
-            el.style.borderBottom = '';
+            el.classList.remove('drop-target-top', 'drop-target-bottom', 'drag-over-zone');
+            const indicator = el.querySelector('.drop-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         });
+        
+        // Remove all drop indicators from body
+        const allIndicators = this.iframeDoc.querySelectorAll('.drop-indicator');
+        allIndicators.forEach(ind => ind.remove());
     },
 
     // Find component index in flat array
@@ -328,8 +475,22 @@ const EditorCanvas = {
         // Update template
         this.currentTemplate.components = flatComponents;
 
-        // Re-render
+        // Add reordering class to all elements for smooth animation
+        const elements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
+        elements.forEach(el => {
+            el.classList.add('reordering');
+        });
+
+        // Re-render with animation
         this.render();
+
+        // Remove reordering class after animation completes
+        setTimeout(() => {
+            const newElements = Array.from(this.iframeDoc.querySelectorAll('.editable-element'));
+            newElements.forEach(el => {
+                el.classList.remove('reordering');
+            });
+        }, 300);
 
         // Save history
         if (typeof HistoryManager !== 'undefined') {
