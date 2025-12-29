@@ -86,13 +86,32 @@ const HTMLExporter = {
 
     // Build header component
     buildHeader(component) {
-        const { logoSrc, logoWidth, menuItems, backgroundColor } = component.properties;
+        const { src, logoWidth, backgroundColor, align, menu1Text, menu1Url, menu2Text, menu2Url, menu3Text, menu3Url, menu4Text, menu4Url } = component.properties;
+        
+        // Use logoSrc if available, otherwise use src (for backwards compatibility)
+        const logoSrc = component.properties.logoSrc || src;
 
-        const menuHTML = menuItems.map(item => `
-            <td align="center" valign="top" width="${100 / menuItems.length}%" class="es-p10t es-p10b es-p5r es-p5l" style="padding-top: 15px; padding-bottom: 15px">
-                <a target="_blank" href="${item.url}">${item.text}</a>
-            </td>
-        `).join('');
+        // Build menu items from individual properties (same logic as editor-canvas.js)
+        const menuItems = [];
+        if (menu1Text) menuItems.push({ text: menu1Text, url: menu1Url || '#' });
+        if (menu2Text) menuItems.push({ text: menu2Text, url: menu2Url || '#' });
+        if (menu3Text) menuItems.push({ text: menu3Text, url: menu3Url || '#' });
+        if (menu4Text) menuItems.push({ text: menu4Text, url: menu4Url || '#' });
+
+        // If menuItems exists directly in properties (from template parser), use it
+        const directMenuItems = component.properties.menuItems;
+        const finalMenuItems = Array.isArray(directMenuItems) && directMenuItems.length > 0 
+            ? directMenuItems 
+            : menuItems;
+
+        // Build menu HTML
+        const menuHTML = finalMenuItems.length > 0 
+            ? finalMenuItems.map(item => `
+                <td align="center" valign="top" width="${100 / finalMenuItems.length}%" class="es-p10t es-p10b es-p5r es-p5l" style="padding-top: 15px; padding-bottom: 15px">
+                    <a target="_blank" href="${item.url || '#'}">${item.text || ''}</a>
+                </td>
+            `).join('')
+            : '';
 
         return `
 <table cellpadding="0" cellspacing="0" align="center" class="es-header">
@@ -156,7 +175,7 @@ const HTMLExporter = {
                 <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" width="600" class="es-content-body">
                     <tbody>
                         <tr>
-                            <td align="left" class="esd-structure es-p20">
+                            <td align="left" class="esd-structure es-p20t es-p20b es-p20r es-p20l">
                                 <table cellpadding="0" cellspacing="0" width="100%">
                                     <tbody>
                                         <tr>
@@ -197,7 +216,7 @@ const HTMLExporter = {
                 <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" width="600" class="es-content-body">
                     <tbody>
                         <tr>
-                            <td align="left" class="esd-structure es-p20">
+                            <td align="left" class="esd-structure es-p20t es-p20b es-p20r es-p20l">
                                 <table cellpadding="0" cellspacing="0" width="100%">
                                     <tbody>
                                         <tr>
@@ -238,7 +257,7 @@ const HTMLExporter = {
                 <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" width="600" class="es-content-body">
                     <tbody>
                         <tr>
-                            <td align="left" class="esd-structure es-p20">
+                            <td align="left" class="esd-structure es-p20t es-p30b es-p20r es-p20l">
                                 <table cellpadding="0" cellspacing="0" width="100%">
                                     <tbody>
                                         <tr>
@@ -315,9 +334,53 @@ const HTMLExporter = {
         return components.map(comp => this.buildComponent(comp)).join('\n');
     },
 
-    // Build footer (simplified version)
+    // Build footer component
     buildFooter(component) {
-        return component.html || '';
+        const { companyName, address, align, link1Text, link1Url, link2Text, link2Url, backgroundColor } = component.properties;
+
+        // Build links from individual properties
+        const links = [];
+        if (link1Text) links.push({ text: link1Text, url: link1Url || '#' });
+        if (link2Text) links.push({ text: link2Text, url: link2Url || '#' });
+
+        const linksHTML = links.map(link => `<a href="${link.url}" style="color: #666; text-decoration: none; margin: 0 10px;">${link.text}</a>`).join(' | ');
+
+        return `
+<table cellpadding="0" cellspacing="0" align="center" class="es-footer">
+    <tbody>
+        <tr>
+            <td align="center" class="esd-stripe">
+                <table bgcolor="${backgroundColor || '#f5f5f5'}" align="center" cellpadding="0" cellspacing="0" width="600" class="es-footer-body">
+                    <tbody>
+                        <tr>
+                            <td align="left" class="esd-structure es-p30t es-p30b es-p20r es-p20l">
+                                <table cellpadding="0" cellspacing="0" width="100%">
+                                    <tbody>
+                                        <tr>
+                                            <td width="560" valign="top" align="${align || 'center'}" class="esd-container-frame">
+                                                <table cellpadding="0" cellspacing="0" width="100%">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td align="${align || 'center'}" class="esd-block-text">
+                                                                ${companyName ? `<p style="margin: 5px 0; font-size: 12px; color: #666;">${companyName}</p>` : ''}
+                                                                ${address ? `<p style="margin: 5px 0; font-size: 12px; color: #666;">${address}</p>` : ''}
+                                                                ${linksHTML ? `<p style="margin: 10px 0; font-size: 11px; color: #666;">${linksHTML}</p>` : ''}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>`;
     },
 
     // Build social icons
@@ -502,7 +565,7 @@ const HTMLExporter = {
                 <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" width="600" class="es-content-body">
                     <tbody>
                         <tr>
-                            <td align="left" class="esd-structure es-p20">
+                            <td align="left" class="esd-structure es-p30t es-p30b es-p20r es-p20l">
                                 <table cellpadding="0" cellspacing="0" width="100%">
                                     <tbody>
                                         <tr>
@@ -536,6 +599,18 @@ const HTMLExporter = {
             img { border: 0; display: block; }
             .es-wrapper { width: 100%; background-color: #fafafa; }
             .es-content-body { background-color: #ffffff; }
+            /* Padding classes for spacing */
+            .es-p5r { padding-right: 5px !important; }
+            .es-p5l { padding-left: 5px !important; }
+            .es-p10t { padding-top: 10px !important; }
+            .es-p10b { padding-bottom: 10px !important; }
+            .es-p20 { padding: 20px !important; }
+            .es-p20t { padding-top: 20px !important; }
+            .es-p20b { padding-bottom: 20px !important; }
+            .es-p20r { padding-right: 20px !important; }
+            .es-p20l { padding-left: 20px !important; }
+            .es-p30t { padding-top: 30px !important; }
+            .es-p30b { padding-bottom: 30px !important; }
         `;
     }
 };
